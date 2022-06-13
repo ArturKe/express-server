@@ -41,14 +41,14 @@ class UserController {
   async loginUser (req,res) {
     try {
       // Достаем данные пользователя
-      const {username, password} = req.body
+      const {email, password} = req.body
       // Ищем пользователя с таким именем в БД
-      const user = await db.query(`SELECT name from USERS where name=`, [username])
-      if (!user) {
+      const user = await db.query(`SELECT email, password from USERS where email=$1 and password=$2`, [email, password])
+      if (user.rows.length === 0) {
         return res.send('Такой пользователь не найден.')
       }
       // Сравниваем пароли
-      // const validPassword = bcrypt.compareSync(password, userPassword)
+      const validPassword = bcrypt.compareSync(password, user.rows[0].password)
       if (!validPassword) {
         return res.send('Пароль не верный')
       }
