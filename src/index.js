@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
   res.send('HELLO NO000DE JS!!!')
 })
 
-// app.use(express.json)
+app.use(express.json())
 app.use('/api', useRouter)
 
 
