@@ -1,28 +1,29 @@
 const db = require('../db')
 const bcrypt = require('bcrypt')
 // const {validationResult} = require('express-validator')
-// const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 
-const generateAccesToken = (id, roles) => {
+const generateAccesToken = (id, email) => {
   const payload = {
     id,
-    usernam
+    email
   }
+  const secretKey = 'brunka'
   return jwt.sign(payload, secretKey, {expiresIn: "24h"})
 }
 
 class UserController {
   async registerUser (req,res) {
     try {
-      const {name, surname, password} = req.body
+      const {name, surname, email, password} = req.body
       //Validation
       // const validationErrors = validationResult(req)
       // if(!validationErrors.isEmpty()) {
       //   return res.status(400).send('Registration error!' + validationErrors)
       // }
       //Проверка на существование пользователя, проверка по логину
-      const candidate = await db.query(`SELECT name from USERS where name=$1`, [name])
-      // console.log(candidate.rows)
+      const candidate = await db.query(`SELECT email from USERS where email=$1`, [email])
+      console.log(candidate.rows)
       if (candidate.rows.length !== 0) {
         return res.send('Такой пользователь уже существует')
       }
@@ -30,9 +31,9 @@ class UserController {
       const hashPassword = bcrypt.hashSync(password, 6)
       // const role = await db.query(`SELECT rule from RULES where rule="regularUser"`) Берем из БД нужную роль
       // Сохраняем в БД логин, роль и захешированный пароль
-      const addUser = await db.query(`INSERT INTO users (name, surname, password) VALUES ($1, $2, $3) RETURNING *`, [name, surname, hashPassword])
+      const addUser = await db.query(`INSERT INTO users (name, surname, email, password) VALUES ($1, $2, $3, $4) RETURNING *`, [name, surname, email, hashPassword])
       // return res.json(name + ' ' + hashPassword)
-      return res.json(addUser)
+      return res.json(addUser.rows)
     } catch (error) {
       console.log(error)
     }
@@ -42,8 +43,11 @@ class UserController {
     try {
       // Достаем данные пользователя
       const {email, password} = req.body
-      // Ищем пользователя с таким именем в БД
-      const user = await db.query(`SELECT email, password from USERS where email=$1 and password=$2`, [email, password])
+      console.log(email, password)
+      // Ищем пользователя с таким именем в БД 
+      const user = await db.query(`SELECT id, email, password from USERS where email=$1`, [email])
+      console.log(user.rows)
+
       if (user.rows.length === 0) {
         return res.send('Такой пользователь не найден.')
       }
@@ -53,13 +57,12 @@ class UserController {
         return res.send('Пароль не верный')
       }
       // Генерируем JWT
-      const token = generateAccesToken(user.id, user.roles)
+      const token = generateAccesToken(user.rows[0].id, user.rows[0].email)
       // возвращаем токен
-      // return res.json({token})
+      return res.json({token})
     } catch (error) {
       console.log(error)
     }
-
   }
 
   // Добавляет пользователя в БД

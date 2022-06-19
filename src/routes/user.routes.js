@@ -5,12 +5,13 @@ const router = new Router
 // const {check} = require('express-validator')
 
 
-router.post('/users', [
+router.post('/user_register', [
   // check('username', 'ИМя пользователя не может быть пустым').notEmpty()
   // check('password', 'Пароль не может быть короче 4 и длиннее 10 символов').isLength({min:4, max:10})
 ], userController.registerUser)
 // router.post('/user', authMiddleware, userController.createUser)
 router.post('/user', userController.createUser)
+router.post('/user_login', userController.loginUser)
 router.get('/user', userController.getUsers)
 // router.get('/user',(req, res) => {
 //     res.send('HELLO USERS JS!!!')
