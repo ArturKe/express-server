@@ -1,15 +1,16 @@
 const db = require('../db')
 const bcrypt = require('bcrypt')
+require('dotenv').config()
 // const {validationResult} = require('express-validator')
 const jwt = require('jsonwebtoken')
 
-const generateAccesToken = (id, email) => {
+
+const generateAccesToken = (id, role) => {
   const payload = {
     id,
-    email
+    role
   }
-  const secretKey = 'brunka'
-  return jwt.sign(payload, secretKey, {expiresIn: "24h"})
+  return jwt.sign(payload, process.env.KEY_KEY, {expiresIn: "24h"})
 }
 
 class UserController {
@@ -44,7 +45,7 @@ class UserController {
       // Достаем данные пользователя
       const {email, password} = req.body
       console.log(email, password)
-      // Ищем пользователя с таким именем в БД 
+      // Ищем пользователя с таким именем в БД
       const user = await db.query(`SELECT id, email, password from USERS where email=$1`, [email])
       console.log(user.rows)
 
@@ -73,6 +74,7 @@ class UserController {
     return res.json(addUser.rows)
   }
 
+
   async getUsers (req, res) {
     try {
       const userInfo = await db.query(`SELECT * from users`)
@@ -91,7 +93,23 @@ class UserController {
     console.log(error)
   }
   async deleteUser (req,res) {
-    console.log(error)
+    try {
+      const {email, token} = req.body
+      console.log(req.params.id)
+      console.log(email, token)
+
+      // Проверяем JWT
+      try {
+        const decoded = jwt.verify(token, process.env.KEY_KEY);
+        console.log(decoded)
+      } catch (error) {
+        res.send('Token is note valid!')
+      }
+
+      res.send('Delete')
+    } catch (error) {
+      console.log(error)
+    }
   }
 }
 
